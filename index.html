@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Data Pipeline Auto-Documenter 🚀</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #4a90e2; /* Blue */
+        --primary-dark: #3a7bd5;
+        --secondary-color: #50e3c2; /* Teal */
+        --background-light: #f8f9fa;
+        --background-dark: #ffffff;
+        --text-color: #333333;
+        --border-color: #e0e0e0;
+        --shadow-light: rgba(0, 0, 0, 0.08);
+        --shadow-medium: rgba(0, 0, 0, 0.12);
+        --error-red: #e74c3c;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: var(--background-light);
+        color: var(--text-color);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        box-sizing: border-box;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 900px;
+        background-color: var(--background-dark);
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px var(--shadow-light);
+        display: flex;
+        flex-direction: column;
+        gap: 25px; /* Space between sections */
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        color: var(--primary-color);
+        font-size: 2.2em;
+        margin-bottom: 20px;
+        font-weight: 700;
+      }
+
+      .input-section,
+      .output-section {
+        background-color: #fdfdfd;
+        padding: 25px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 15px var(--shadow-light);
+      }
+
+      h2 {
+        font-size: 1.5em;
+        color: var(--primary-color);
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: var(--text-color);
+        font-size: 1.1em;
+      }
+
+      textarea {
+        width: calc(100% - 20px);
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 1em;
+        min-height: 200px; /* Taller textarea */
+        resize: vertical;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        box-sizing: border-box; /* Include padding in width */
+      }
+      textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        outline: none;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 15px; /* Space between buttons */
+        margin-top: 10px;
+      }
+
+      button {
+        flex: 1; /* Make buttons take equal width */
+        padding: 15px 25px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease,
+          box-shadow 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+      button:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+      }
+      button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        transform: translateY(0);
+        box-shadow: none;
+      }
+      .clear-button {
+        background-color: #6c757d; /* Grey for clear */
+      }
+      .clear-button:hover {
+        background-color: #5a6268;
+      }
+
+      #documentationOutput {
+        background-color: #f0f4f8; /* Lighter background for output */
+        padding: 15px;
+        border-radius: 8px;
+        min-height: 100px;
+        border: 1px dashed var(--border-color);
+        line-height: 1.6;
+        font-size: 1em;
+        overflow-x: auto; /* Allow horizontal scrolling for wide content */
+      }
+      /* Styling for markdown generated content */
+      #documentationOutput h1,
+      #documentationOutput h2,
+      #documentationOutput h3,
+      #documentationOutput h4 {
+        color: var(--primary-dark);
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 5px;
+      }
+      #documentationOutput p {
+        margin-bottom: 1em;
+      }
+      #documentationOutput ul,
+      #documentationOutput ol {
+        margin-left: 20px;
+        margin-bottom: 1em;
+      }
+      #documentationOutput pre {
+        background-color: #e9ecef;
+        padding: 10px;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.9em;
+        margin-bottom: 1em;
+      }
+      #documentationOutput code {
+        font-family: "Courier New", Courier, monospace;
+        background-color: #e9ecef;
+        padding: 2px 4px;
+        border-radius: 3px;
+      }
+      /* Inline code styling for output */
+      #documentationOutput p code {
+        background-color: rgba(0, 0, 0, 0.05);
+        padding: 2px 5px;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+
+      .action-message {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: 600;
+      }
+      .error-message {
+        background-color: #fadbd8;
+        color: var(--error-red);
+        border: 1px solid var(--error-red);
+      }
+      .loading-spinner {
+        border: 5px solid rgba(0, 0, 0, 0.1);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 30px auto;
+        display: none;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Copy button styling */
+      .copy-button-wrapper {
+        display: flex;
+        justify-content: flex-end; /* Align to the right */
+        margin-bottom: 10px; /* Space above the output content */
+      }
+      .copy-button {
+        background-color: #6c757d; /* Grey */
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        width: auto;
+        flex: none;
+      }
+      .copy-button:hover {
+        background-color: #5a6268;
+        transform: translateY(-1px);
+      }
+      .copy-button:disabled {
+        background-color: #a0a0a0;
+        cursor: not-allowed;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .container {
+          padding: 25px;
+        }
+        h1 {
+          font-size: 1.8em;
+        }
+        .input-section,
+        .output-section {
+          padding: 15px;
+        }
+        .button-group {
+          flex-direction: column;
+        }
+        button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>AI Data Pipeline Auto-Documenter 🚀</h1>
+
+      <div class="input-section">
+        <h2>Pipeline Input 📝</h2>
+        <label for="pipelineInput"
+          >Enter your pipeline code, configuration (e.g., Airflow DAG, Python
+          script), or a detailed description:</label
+        >
+        <textarea
+          id="pipelineInput"
+          placeholder="e.g.,
+A Python script that:
+1. Reads customer data from a CSV file (customers.csv).
+2. Filters out customers with age less than 18.
+3. Calculates a new 'customer_segment' column based on purchase history.
+4. Stores the refined data into a new Parquet file.
+"
+        ></textarea>
+
+        <div class="button-group">
+          <button id="documentButton">✨ Auto-Document Pipeline</button>
+          <button id="clearButton" class="clear-button">🗑️ Clear Input</button>
+        </div>
+
+        <div class="loading-spinner" id="loadingSpinner"></div>
+        <div class="action-message error-message" id="errorMessage"></div>
+      </div>
+
+      <div class="output-section">
+        <h2>Generated Documentation 📖</h2>
+        <div class="copy-button-wrapper">
+          <button id="copyButton" class="copy-button" disabled>
+            📋 Copy Documentation
+          </button>
+        </div>
+        <div id="documentationOutput">
+          Your generated documentation will appear here.
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const pipelineInput = document.getElementById("pipelineInput");
+      const documentButton = document.getElementById("documentButton");
+      const clearButton = document.getElementById("clearButton");
+      const documentationOutput = document.getElementById(
+        "documentationOutput"
+      );
+      const errorMessage = document.getElementById("errorMessage");
+      const loadingSpinner = document.getElementById("loadingSpinner");
+      const copyButton = document.getElementById("copyButton");
+
+      function setLoading(isLoading) {
+        if (isLoading) {
+          loadingSpinner.style.display = "block";
+          documentButton.disabled = true;
+          clearButton.disabled = true;
+          copyButton.disabled = true;
+          errorMessage.textContent = "";
+          documentationOutput.innerHTML = "Generating documentation...";
+        } else {
+          loadingSpinner.style.display = "none";
+          documentButton.disabled = false;
+          clearButton.disabled = false;
+        }
+      }
+
+      documentButton.addEventListener("click", async () => {
+        const inputContent = pipelineInput.value;
+
+        if (!inputContent.trim()) {
+          errorMessage.textContent =
+            "Please enter pipeline code or a description.";
+          return;
+        }
+
+        setLoading(true);
+
+        try {
+          const response = await fetch("/document_pipeline", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ pipeline_input: inputContent }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            documentationOutput.innerHTML = data.documentation.trim();
+            copyButton.disabled = false;
+          } else {
+            errorMessage.textContent =
+              data.error || "An unknown error occurred.";
+            documentationOutput.innerHTML = "";
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          errorMessage.textContent =
+            "Could not connect to the server. Please ensure the backend is running.";
+          documentationOutput.innerHTML = "";
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      clearButton.addEventListener("click", () => {
+        pipelineInput.value = "";
+        documentationOutput.innerHTML =
+          "Your generated documentation will appear here.";
+        errorMessage.textContent = "";
+        copyButton.disabled = true;
+      });
+
+      copyButton.addEventListener("click", async () => {
+        try {
+          const docText =
+            documentationOutput.innerText || documentationOutput.textContent;
+          await navigator.clipboard.writeText(docText.trim());
+          copyButton.textContent = "✅ Copied!";
+          setTimeout(() => {
+            copyButton.textContent = "📋 Copy Documentation";
+          }, 2000);
+        } catch (err) {
+          console.error("Failed to copy text: ", err);
+          copyButton.textContent = "❌ Copy Failed";
+          setTimeout(() => {
+            copyButton.textContent = "📋 Copy Documentation";
+          }, 2000);
+        }
+      });
+    </script>
+  </body>
+</html>
